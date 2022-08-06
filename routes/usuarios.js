@@ -1,8 +1,15 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
 
-const { validarCampos } = require('../middlewares/validar-campos');
-const { esRoleValido, emailExiste,existeUsuarioPorId } = require('../helpers/db.validators');
+const {
+    validarCampos,
+    validarJWT,
+    esAdminRole,
+    tieneRole
+} = require('../middlewares');
+
+
+const { esRoleValido, emailExiste, existeUsuarioPorId } = require('../helpers/db.validators');
 
 const { usuariosGet,
     usuariosPut,
@@ -16,8 +23,8 @@ const router = Router();
 
 router.get('/', usuariosGet);
 
-router.put('/:id',[
-    check('id','No es un ID válido').isMongoId(),
+router.put('/:id', [
+    check('id', 'No es un ID válido').isMongoId(),
     check('id').custom(existeUsuarioPorId),
     check('rol').custom(esRoleValido),
     validarCampos
@@ -36,11 +43,14 @@ router.post('/', [
     validarCampos //Antes se ejecuta este metodo y si todo va bien se va al controlador usuariosPost
 
 
-    
+
 ], usuariosPost);
 
-router.delete('/:id',[
-    check('id','No es un ID válido').isMongoId(),
+router.delete('/:id', [
+    validarJWT,
+    // esAdminRole,
+    tieneRole('ADMIN_ROLE', 'VENTAR_ROLE', 'OTRO_ROLE'),
+    check('id', 'No es un ID válido').isMongoId(),
     check('id').custom(existeUsuarioPorId),
     validarCampos
 ], usuariosDelete);
